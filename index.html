@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Simple Javascript Adventure Game</title>
-  <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-  <div class="game-container">
-    <h1>Simple Javascript Adventure Game</h1>
-    <p>Score: <span id="score">0</span></p>
-    <button id="clickBtn">Click me!</button>
-  </div>
+    <title>Simple Javascript Adventure Game</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <canvas
+      id="gameCanvas"
+      width="576"
+      height="576"
+      style="border: 1px solid black"
+    ></canvas>
 
-  <script src="js/script.js"></script>
-</body>
+    <script src="js/MessageManager.js"></script>
+    <script src="js/Map.js"></script>
+    <script src="js/Player.js"></script>
+    <script src="js/Game.js"></script>
+    <script src="js/script.js"></script>
+  </body>
 </html>
