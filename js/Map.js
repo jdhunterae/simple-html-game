@@ -56,7 +56,7 @@ class Map {
       for (let x = 0; x < this.grid[y].length; x++) {
         if (this.grid[y][x] === TILE_TYPES.LOCKED_DOOR) {
           if (this.tileManager) {
-            const doorEffect = this.tileEffect.getEffect(
+            const doorEffect = this.tileManager.getEffect(
               TILE_TYPES.LOCKED_DOOR
             );
             doorEffect.unlock();
