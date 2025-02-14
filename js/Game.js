@@ -8,7 +8,11 @@ class Game {
     this.gridSize = 9;
 
     this.map = new Map();
+    this.tileManager = new TileManager(this);
+    this.map.setTileManager(this.tileManager);
     this.player = new Player(4, 4); // start in center
+
+    // Game state
     this.currentLevel = 0;
     this.message = '';
     this.awaitingStart = false;
@@ -39,65 +43,76 @@ class Game {
 
   loadWinScreen() {
     this.map.grid = Array.from({ length: this.gridSize }, () =>
-      Array(this.gridSize).fill('0')
+      Array(this.gridSize).fill(TILE_TYPES.EMPTY)
     );
     this.message = 'You Win! Press R to restart.';
     this.awaitingStart = true;
     this.render();
   }
 
+  completeLevel() {
+    this.message = `Level #${this.currentLevel} Complete! Press ENTER for next level.`;
+    this.awaitingStart = true;
+    this.map.isLevelComplete = true;
+    this.render();
+  }
+
+  resetLevel(message = 'Press ENTER to try again.') {
+    this.message = message;
+    this.awaitingStart = true;
+    this.loadLevel(this.currentLevel);
+  }
+
   setupInput() {
     window.addEventListener('keydown', (e) => {
-      if (this.awaitingStart && e.key === 'Enter') {
-        this.awaitingStart = false;
-        this.message = '';
-
-        if (this.map.isLevelComplete) {
-          this.currentLevel++;
-          this.loadLevel(this.currentLevel);
-        } else {
-          this.render();
-        }
-
+      if (this.awaitingStart) {
+        this.handleStartInput(e.key);
         return;
       }
 
-      if (this.awaitingStart && e.key === 'r') {
-        this.currentLevel = 0;
-        this.loadLevel(this.currentLevel);
-        return;
-      }
-
-      if (!this.awaitingStart) {
-        const moves = {
-          ArrowUp: [0, -1],
-          ArrowDown: [0, 1],
-          ArrowLeft: [-1, 0],
-          ArrowRight: [1, 0],
-          w: [0, -1],
-          s: [0, 1],
-          a: [-1, 0],
-          d: [1, 0],
-        };
-
-        if (moves[e.key]) {
-          const [dx, dy] = moves[e.key];
-          const newX = this.player.x + dx;
-          const newY = this.player.y + dy;
-
-          if (this.map.isWalkable(newX, newY)) {
-            this.player.move(dx, dy);
-
-            if (this.map.getTile(newX, newY) === 'E') {
-              this.message = 'Level Complete! Press ENTER for next level.';
-              this.awaitingStart = true;
-              this.map.isLevelComplete = true;
-            }
-            this.render();
-          }
-        }
-      }
+      this.handleGameInput(e.key);
     });
+  }
+
+  handleStartInput(key) {
+    if (key === 'Enter') {
+      this.awaitingStart = false;
+      this.message = '';
+
+      if (this.map.isLevelComplete) {
+        this.currentLevel++;
+        this.loadLevel(this.currentLevel);
+      } else {
+        this.render();
+      }
+    } else if (key === 'r') {
+      this.currentLevel = 0;
+      this.loadLevel(this.currentLevel);
+    }
+  }
+
+  handleGameInput(key) {
+    const moves = {
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      w: [0, -1],
+      s: [0, 1],
+      a: [-1, 0],
+      d: [1, 0],
+    };
+
+    if (moves[key]) {
+      const [dx, dy] = moves[key];
+      const newX = this.player.x + dx;
+      const newY = this.player.y + dy;
+
+      if (this.tileManager.isWalkable(newX, newY)) {
+        this.player.move(dx, dy, this.tileManager);
+        this.render();
+      }
+    }
   }
 
   render() {
@@ -107,19 +122,16 @@ class Game {
     const startX = this.player.x - Math.floor(this.gridSize / 2);
     const startY = this.player.y - Math.floor(this.gridSize / 2);
 
+    // render map tiles
     for (let row = 0; row < this.gridSize; row++) {
       for (let col = 0; col < this.gridSize; col++) {
         const tileX = startX + col;
         const tileY = startY + row;
         const tile = this.map.getTile(tileX, tileY);
 
-        this.ctx.fillStyle = this.getTileColor(tile);
-        this.ctx.fillRect(
-          col * this.tileSize,
-          row * this.tileSize,
-          this.tileSize,
-          this.tileSize
-        );
+        if (tile !== null) {
+          this.tileManager.renderTile(tile, this.ctx, col, row, this.tileSize);
+        }
       }
     }
 
@@ -128,8 +140,16 @@ class Game {
       const centerX = Math.floor(this.gridSize / 2) * this.tileSize;
       const centerY = Math.floor(this.gridSize / 2) * this.tileSize;
 
-      this.ctx.fillStyle = 'white';
-      this.ctx.fillRect(centerX, centerY, this.tileSize, this.tileSize);
+      const playerSize = this.tileSize * PLAYER_SETTINGS.SIZE_RATIO;
+      const offset = (this.tileSize - playerSize) / 2;
+
+      this.ctx.fillStyle = PLAYER_SETTINGS.COLOR;
+      this.ctx.fillRect(
+        centerX + offset,
+        centerY + offset,
+        playerSize,
+        playerSize
+      );
     }
 
     // Draw message if present
@@ -140,21 +160,6 @@ class Game {
         this.canvas.height
       );
       messageManager.displayMessage(this.message);
-    }
-  }
-
-  getTileColor(tile) {
-    switch (tile) {
-      case '0':
-        return 'green';
-      case '1':
-        return 'blue';
-      case 'E':
-        return 'red';
-      case 'S':
-        return 'lightgreen';
-      default:
-        return 'black';
     }
   }
 }
