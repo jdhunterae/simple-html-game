@@ -5,6 +5,7 @@ A simple HTML and Javascript game for hosting on pages
 ## TODO List
 
 - [ ] Need to fix graphical glitches with LockedDoor unlocking
+  - [ ] "opened" door is confusing, brown tile, can I safely enter? only other brown tile is cracked floors
 - [ ] Need to fix graphical glitches with Button being pressed
   - [ ] Button depression icon appears above and to the right
 - [ ] Need to fix graphical glitches with CrackedFloor falling away
